@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/+$/, '');
 
 const Profile = () => {
-    const { user } = useAuth();
+    const { user, updateUser } = useAuth();
     const [profile, setProfile] = useState({ skillsOffered: [], skillsNeeded: [] });
     const [skillInput, setSkillInput] = useState('');
     const [skillType, setSkillType] = useState('offered'); // 'offered' or 'needed'
@@ -45,6 +45,7 @@ const Profile = () => {
             const config = { headers: { Authorization: `Bearer ${user.token}` } };
             const { data } = await axios.put(`${API_URL}/api/users/profile`, newProfile, config);
             setProfile(data);
+            updateUser(data); // Sync global state and localStorage
             setSkillInput('');
         } catch (error) {
             console.error(error);
@@ -63,6 +64,7 @@ const Profile = () => {
             const config = { headers: { Authorization: `Bearer ${user.token}` } };
             const { data } = await axios.put(`${API_URL}/api/users/profile`, newProfile, config);
             setProfile(data);
+            updateUser(data); // Sync global state and localStorage
         } catch (error) {
             console.error(error);
         }
