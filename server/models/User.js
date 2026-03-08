@@ -5,8 +5,8 @@ const userSchema = mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    skillsOffered: [{ type: String }],
-    skillsNeeded: [{ type: String }],
+    skillsOffered: { type: [String], default: [] },
+    skillsNeeded: { type: [String], default: [] },
     reputation: { type: Number, default: 0 },
 }, {
     timestamps: true

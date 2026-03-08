@@ -33,18 +33,30 @@ const Profile = () => {
     }, [user.token]);
 
     const handleAddSkill = async () => {
-        if (!skillInput) return;
-        const newProfile = { ...profile };
-        if (skillType === 'offered') {
-            newProfile.skillsOffered.push(skillInput);
-        } else {
-            newProfile.skillsNeeded.push(skillInput);
-        }
+        const normalizedSkill = skillInput.trim();
+        if (!normalizedSkill) return;
+
+        const offeredSkills = profile.skillsOffered || [];
+        const neededSkills = profile.skillsNeeded || [];
+
+        const newProfile = {
+            ...profile,
+            skillsOffered: skillType === 'offered'
+                ? [...new Set([...offeredSkills, normalizedSkill])]
+                : offeredSkills,
+            skillsNeeded: skillType === 'needed'
+                ? [...new Set([...neededSkills, normalizedSkill])]
+                : neededSkills,
+        };
 
         try {
             const config = { headers: { Authorization: `Bearer ${user.token}` } };
-            const { data } = await axios.put(`${API_URL}/api/users/profile`, newProfile, config);
-            setProfile(data);
+            const payload = {
+                skillsOffered: newProfile.skillsOffered,
+                skillsNeeded: newProfile.skillsNeeded,
+            };
+            const { data } = await axios.put(`${API_URL}/api/users/profile`, payload, config);
+            setProfile((prev) => ({ ...prev, ...data }));
             updateUser(data); // Sync global state and localStorage
             setSkillInput('');
         } catch (error) {
@@ -53,17 +65,27 @@ const Profile = () => {
     };
 
     const handleRemoveSkill = async (skill, type) => {
-        const newProfile = { ...profile };
-        if (type === 'offered') {
-            newProfile.skillsOffered = newProfile.skillsOffered.filter(s => s !== skill);
-        } else {
-            newProfile.skillsNeeded = newProfile.skillsNeeded.filter(s => s !== skill);
-        }
+        const offeredSkills = profile.skillsOffered || [];
+        const neededSkills = profile.skillsNeeded || [];
+
+        const newProfile = {
+            ...profile,
+            skillsOffered: type === 'offered'
+                ? offeredSkills.filter(s => s !== skill)
+                : offeredSkills,
+            skillsNeeded: type === 'needed'
+                ? neededSkills.filter(s => s !== skill)
+                : neededSkills,
+        };
 
         try {
             const config = { headers: { Authorization: `Bearer ${user.token}` } };
-            const { data } = await axios.put(`${API_URL}/api/users/profile`, newProfile, config);
-            setProfile(data);
+            const payload = {
+                skillsOffered: newProfile.skillsOffered,
+                skillsNeeded: newProfile.skillsNeeded,
+            };
+            const { data } = await axios.put(`${API_URL}/api/users/profile`, payload, config);
+            setProfile((prev) => ({ ...prev, ...data }));
             updateUser(data); // Sync global state and localStorage
         } catch (error) {
             console.error(error);
@@ -102,7 +124,7 @@ const Profile = () => {
                     <div className="mt-4">
                         <h4>Skills I Offer</h4>
                         <div className="flex gap-2" style={{ flexWrap: 'wrap', marginTop: '0.5rem' }}>
-                            {profile.skillsOffered.map((skill, index) => (
+                            {(profile.skillsOffered || []).map((skill, index) => (
                                 <span key={index} className="badge" style={{ background: '#e0e7ff', padding: '4px 12px', borderRadius: '12px', fontSize: '0.85rem' }}>
                                     {skill} <button onClick={() => handleRemoveSkill(skill, 'offered')} style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}>&times;</button>
                                 </span>
@@ -113,7 +135,7 @@ const Profile = () => {
                     <div className="mt-4">
                         <h4>Skills I Need</h4>
                         <div className="flex gap-2" style={{ flexWrap: 'wrap', marginTop: '0.5rem' }}>
-                            {profile.skillsNeeded.map((skill, index) => (
+                            {(profile.skillsNeeded || []).map((skill, index) => (
                                 <span key={index} className="badge" style={{ background: '#fef3c7', padding: '4px 12px', borderRadius: '12px', fontSize: '0.85rem' }}>
                                     {skill} <button onClick={() => handleRemoveSkill(skill, 'needed')} style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}>&times;</button>
                                 </span>
